@@ -6,99 +6,47 @@
 #include <cstdio>
 #include <cstdlib>
 
+#define BLACK false
+#define RED true
+
 #ifndef STATICREVERSE_MAIN_H
 #define STATICREVERSE_MAIN_H
+
+
 struct node {
     int data;
-    node *left, *right;
+    node *left;
+    node *right;
+    node *parent;
+    bool color;
 };
 
-void insert(int in, struct node **_node) {
-    if ((*_node) == nullptr) {
-        (*_node) = new struct node;
-        (*_node)->data = in;
-        (*_node)->left = (*_node)->right = nullptr;
-        return;
-    }
-    if (in > (*_node)->data) insert(in, &(*_node)->right);
-    else insert(in, &(*_node)->left);
-}
+#define NIL &sentinel           /* all leafs are sentinels */
+node sentinel = {0, NIL, NIL, nullptr, BLACK};
 
-void show(struct node **_node, int count) {
-    if ((*_node) == nullptr) {
-        std::cout << "<Is Empty>" << std::endl << std::endl;
-        return;
-    }
+class rbtree {
+public:
+    node *insert(int data);
 
-    if ((*_node)->right != nullptr) {
-        show(&(*_node)->right, count + 4);
-    }
+    void insertFix(node *x);
 
-    for (int i = 0; i < count; ++i) fputs(" ", stdout);
-    std::cout << (*_node)->data << std::endl;
+    void turnRight(node *x);
 
-    if ((*_node)->left != nullptr) {
-        show(&(*_node)->left, count + 4);
-    }
-}
+    void turnLeft(node *x);
 
-struct node *deleteUnit(int in, struct node *_node) {
-    if (!_node) return _node;
-    struct node *p, *p2;
-    if (_node->data == in) {
-        if (_node->left == nullptr) {
-            p = _node->right;
-            free(_node);
-            return p;
-        } else if (_node->right == nullptr) {
-            p = _node->left;
-            free(_node);
-            return p;
-        } else {
-            p2 = _node->right;
-            p = _node->right;
-            while (p->left) p = p->left;
-            p->left = _node->left;
-            free(_node);
-            return p2;
-        }
-    }
-    if (in > _node->data) _node->right = deleteUnit(in, _node->right);
-    else _node->left = deleteUnit(in, _node->left);
-}
+    void show(struct node **_node, int count);
 
-int inorder(struct node *_node) {
-    struct node *tmp;
-    int result = 0;
-    if (!_node) return -1;
-    for (tmp = _node; tmp; tmp = tmp->right) {
-        inorder(tmp->left);
-        result = printf("%d -> ", tmp->data);
-    }
-    return result;
-}
+    struct node *deleteUnit(int in, struct node *_node);
 
-int preorder(struct node *_node) {
-    struct node *tmp;
-    int result = 0;
-    if (!_node) return printf("Is empty");;
-    for (tmp = _node; tmp; tmp = tmp->right) {
-        printf("%d -> ", tmp->data);
-        result = preorder(tmp->left);
-    }
-    return result;
-}
+    int inorder(struct node *_node);
 
-int postorder(struct node *_node) {
-    struct node *tmp;
-    int result = 0;
-    if (!_node) return printf("Is empty");
-    if(_node != nullptr) {
-        postorder(_node->left);
-        postorder(_node->right);
-    }
-    result = printf("%d -> ", _node->data);
-    return result;
-}
+    int preorder(struct node *_node);
+
+    int postorder(struct node *_node);
+
+
+    node *_root = NIL;
+};
+
 
 #endif //STATICREVERSE_MAIN_H
