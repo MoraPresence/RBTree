@@ -21,7 +21,7 @@ struct node {
     bool color;
 };
 
-#define NIL &sentinel           /* all leafs are sentinels */
+#define NIL &sentinel
 node sentinel = {0, NIL, NIL, nullptr, BLACK};
 
 class rbtree {

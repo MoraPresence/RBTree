@@ -24,12 +24,47 @@ node *rbtree::insert(int data) {
     } else {
         _root = x;
     }
-
+    insertFix(x);
     return x;
 }
 
 void rbtree::insertFix(node *x) {
-
+    while (x != _root && x->parent->color == RED) {
+        if (x->parent == x->parent->parent->left) {
+            node *tmp = x->parent->parent->right;
+            if (tmp->color == RED) {
+                x->parent->color = BLACK;
+                x->parent->parent->color = RED;
+                tmp->color = BLACK;
+                x = x->parent->parent;
+            } else {
+                if (x == x->parent->right) {
+                    x = x->parent;
+                    turnLeft(x);
+                }
+                x->parent->color = BLACK;
+                x->parent->parent->color = RED;
+                turnRight(x->parent->parent);
+            }
+        } else {
+            node *tmp = x->parent->parent->left;
+            if (tmp->color == RED) {
+                x->parent->color = BLACK;
+                x->parent->parent->color = RED;
+                tmp->color = BLACK;
+                x = x->parent->parent;
+            } else {
+                if (x == x->parent->left) {
+                    x = x->parent;
+                    turnRight(x);
+                }
+                x->parent->color = BLACK;
+                x->parent->parent->color = RED;
+                turnLeft(x->parent->parent);
+            }
+        }
+    }
+    _root->color = BLACK;
 }
 
 void rbtree::show(struct node **_node, int count) {
@@ -78,8 +113,8 @@ struct node *rbtree::deleteUnit(int in, struct node *_node) {
 int rbtree::inorder(struct node *_node) {
     struct node *tmp;
     int result = 0;
-    if (!_node) return -1;
-    for (tmp = _node; tmp; tmp = tmp->right) {
+    if (!_node || _node == NIL) return -1;
+    for (tmp = _node; tmp->parent != nullptr || tmp == _root; tmp = tmp->right) {
         inorder(tmp->left);
         result = printf("%d -> ", tmp->data);
     }
@@ -89,8 +124,8 @@ int rbtree::inorder(struct node *_node) {
 int rbtree::preorder(struct node *_node) {
     struct node *tmp;
     int result = 0;
-    if (!_node) return printf("Is empty");;
-    for (tmp = _node; tmp; tmp = tmp->right) {
+    if (!_node || _node == NIL) return printf("Is empty");
+    for (tmp = _node; tmp->parent != nullptr || tmp == _root; tmp = tmp->right) {
         printf("%d -> ", tmp->data);
         result = preorder(tmp->left);
     }
@@ -98,13 +133,10 @@ int rbtree::preorder(struct node *_node) {
 }
 
 int rbtree::postorder(struct node *_node) {
-    struct node *tmp;
     int result = 0;
-    if (!_node) return printf("Is empty");
-    if (_node != nullptr) {
-        postorder(_node->left);
-        postorder(_node->right);
-    }
+    if (!_node || _node == NIL) return printf("Is empty");
+    postorder(_node->left);
+    postorder(_node->right);
     result = printf("%d -> ", _node->data);
     return result;
 }
@@ -153,15 +185,17 @@ int main() {
     a.insert(1);
     a.insert(4);
     a.insert(5);
-    a.turnLeft(a._root->right);
     //BinWood = deleteUnit(2, BinWood);
     a.show(&a._root, 0);
     //show(&BinWood, 0);
-//    inorder(BinWood);
+    a.inorder(a._root);
+    std::cout << std::endl;
+     a.preorder(a._root);
+    std::cout << std::endl;
 //    std::cout << std::endl;
 //    preorder(BinWood);
 //    std::cout << std::endl;
-//    postorder(BinWood->left);
+    a.postorder(a._root);
 //    postorder(BinWood->right);
 
     return 0;
