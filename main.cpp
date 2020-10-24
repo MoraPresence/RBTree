@@ -85,29 +85,48 @@ void rbtree::show(struct node **_node, int count) {
     }
 }
 
-struct node *rbtree::deleteUnit(int in, struct node *_node) {
-    if (!_node) return _node;
-    struct node *p, *p2;
-    if (_node->data == in) {
-        if (_node->left == nullptr) {
-            p = _node->right;
-            free(_node);
-            return p;
-        } else if (_node->right == nullptr) {
-            p = _node->left;
-            free(_node);
-            return p;
+node *rbtree::searchUnit(int data, struct node *_node) {
+    if (!_node || _node == NIL) return _node;
+    if (_node->data == data) {
+        deleteUnit(_node);
+    }
+    if (data > _node->data) _node->right = searchUnit(data, _node->right);
+    else _node->left = searchUnit(data, _node->left);
+}
+
+void rbtree::deleteUnit(struct node *_node) {
+    struct node *p = NIL;
+    struct node *p2 = NIL;
+    if (!_node || _node == NIL) return;
+
+    if (!_node->left || _node->left == NIL && !_node->right || _node->right == NIL) {
+        if (_node->parent->left == _node) {
+            _node->parent->left = NIL;
         } else {
-            p2 = _node->right;
-            p = _node->right;
-            while (p->left) p = p->left;
-            p->left = _node->left;
-            free(_node);
-            return p2;
+            _node->parent->right = NIL;
         }
     }
-    if (in > _node->data) _node->right = deleteUnit(in, _node->right);
-    else _node->left = deleteUnit(in, _node->left);
+
+    if (!_node->left || _node->left == NIL) {
+        p = _node->right;
+    } else {
+        p = _node->left;
+    }
+
+    p->parent = _node->parent;
+    if (_node->parent)
+        if (_node == _node->parent->left)
+            _node->parent->left = p;
+        else
+            _node->parent->right = p;
+    else
+        _root = p;
+
+    if (_node != p2) p2->data = _node->data;
+
+    if (p2->color == BLACK)
+        deleteFix(p);
+    free(_node);
 }
 
 int rbtree::inorder(struct node *_node) {
@@ -185,17 +204,23 @@ int main() {
     a.insert(1);
     a.insert(4);
     a.insert(5);
-    //BinWood = deleteUnit(2, BinWood);
+//    a._root = a.deleteUnit(4, a._root);
+//    a.insert(4);
+    a.insert(7);
+    a.insert(8);
+    a.searchUnit(8, a._root);
+    a.insertFix(a._root->right);
     a.show(&a._root, 0);
     //show(&BinWood, 0);
-    a.inorder(a._root);
-    std::cout << std::endl;
-     a.preorder(a._root);
-    std::cout << std::endl;
+//    a.inorder(a._root);
 //    std::cout << std::endl;
-//    preorder(BinWood);
+//     a.preorder(a._root);
 //    std::cout << std::endl;
-    a.postorder(a._root);
+////    std::cout << std::endl;
+////    preorder(BinWood);
+////    std::cout << std::endl;
+//    a.postorder(a._root);
+//
 //    postorder(BinWood->right);
 
     return 0;

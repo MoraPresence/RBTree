@@ -36,7 +36,11 @@ public:
 
     void show(struct node **_node, int count);
 
-    struct node *deleteUnit(int in, struct node *_node);
+    node *searchUnit(int data, struct node *_node);
+
+    void deleteUnit(struct node *_node);
+
+    void deleteFix(node *x);
 
     int inorder(struct node *_node);
 
