@@ -36,7 +36,7 @@ public:
 
     void show(struct node **_node, int count);
 
-    node *searchUnit(int data, struct node *_node);
+    void searchUnit(int data, struct node *_node);
 
     void deleteUnit(struct node *_node);
 

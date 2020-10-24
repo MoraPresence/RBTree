@@ -85,13 +85,14 @@ void rbtree::show(struct node **_node, int count) {
     }
 }
 
-node *rbtree::searchUnit(int data, struct node *_node) {
-    if (!_node || _node == NIL) return _node;
+void rbtree::searchUnit(int data, struct node *_node) {
+    if (!_node || _node == NIL) return;
     if (_node->data == data) {
         deleteUnit(_node);
+        return;
     }
-    if (data > _node->data) _node->right = searchUnit(data, _node->right);
-    else _node->left = searchUnit(data, _node->left);
+    if (data > _node->data) searchUnit(data, _node->right);
+    else searchUnit(data, _node->left);
 }
 
 void rbtree::deleteUnit(struct node *_node) {
@@ -105,28 +106,106 @@ void rbtree::deleteUnit(struct node *_node) {
         } else {
             _node->parent->right = NIL;
         }
+        free(_node);
+        if (p->color == BLACK)
+            deleteFix(p);
+        free(_node);
+        return;
     }
-
+    if ( _node->left != NIL && _node->right != NIL) {
+        p = _node->left;
+        p2 = _node->right;
+        p2->parent = p;
+        p->right = p2;
+        if (_node->parent) {
+            if (_node->parent->left == _node) {
+                _node->parent->left = p;
+                p->parent = _node->parent;
+            } else {
+                _node->parent->right = p;
+                p->parent = _node->parent;
+            }
+        } else
+            _root = p;
+        if (_node->color == BLACK)
+            deleteFix(p);
+        free(_node);
+        return;
+    }
     if (!_node->left || _node->left == NIL) {
         p = _node->right;
-    } else {
+    } else if (!_node->right || _node->right == NIL) {
         p = _node->left;
     }
-
-    p->parent = _node->parent;
-    if (_node->parent)
-        if (_node == _node->parent->left)
+    if (_node->parent) {
+        if (_node->parent->left == _node) {
             _node->parent->left = p;
-        else
+            p->parent = _node->parent;
+        } else {
             _node->parent->right = p;
-    else
+            p->parent = _node->parent;
+        }
+    } else
         _root = p;
 
-    if (_node != p2) p2->data = _node->data;
-
-    if (p2->color == BLACK)
+    if (p->color == BLACK)
         deleteFix(p);
     free(_node);
+}
+
+void rbtree::deleteFix(node *_node) {
+    while (_node != _root && _node->color == BLACK) {
+        if (_node == _node->parent->left) {
+            node *tmp = _node->parent->right;
+            if (tmp->color == RED) {
+                tmp->color = BLACK;
+                _node->parent->color = RED;
+                turnLeft (_node->parent);
+                tmp = _node->parent->right;
+            }
+            if (tmp->left->color == BLACK && tmp->right->color == BLACK) {
+                tmp->color = RED;
+                _node = _node->parent;
+            } else {
+                if (tmp->right->color == BLACK) {
+                    tmp->left->color = BLACK;
+                    tmp->color = RED;
+                    turnRight (tmp);
+                    tmp = _node->parent->right;
+                }
+                tmp->color = _node->parent->color;
+                _node->parent->color = BLACK;
+                tmp->right->color = BLACK;
+                turnLeft (_node->parent);
+                _node = _root;
+            }
+        } else {
+            node *tmp = _node->parent->left;
+            if (tmp->color == RED) {
+                tmp->color = BLACK;
+                _node->parent->color = RED;
+                turnRight (_node->parent);
+                tmp = _node->parent->left;
+            }
+            if (tmp->right->color == BLACK && tmp->left->color == BLACK) {
+                tmp->color = RED;
+                _node = _node->parent;
+            } else {
+                if (tmp->left->color == BLACK) {
+                    tmp->right->color = BLACK;
+                    tmp->color = RED;
+                    turnLeft (tmp);
+                    tmp = _node->parent->left;
+                }
+                tmp->color = _node->parent->color;
+                _node->parent->color = BLACK;
+                tmp->left->color = BLACK;
+                turnRight (_node->parent);
+                _node = _root;
+            }
+        }
+    }
+    _node->color = BLACK;
 }
 
 int rbtree::inorder(struct node *_node) {
@@ -201,15 +280,13 @@ int main() {
     rbtree a;
     a.insert(2);
     a.insert(3);
+//    a.insert(-1);
     a.insert(1);
     a.insert(4);
-    a.insert(5);
+//    a.insert(5);
 //    a._root = a.deleteUnit(4, a._root);
 //    a.insert(4);
-    a.insert(7);
-    a.insert(8);
-    a.searchUnit(8, a._root);
-    a.insertFix(a._root->right);
+    a.searchUnit(2, a._root);
     a.show(&a._root, 0);
     //show(&BinWood, 0);
 //    a.inorder(a._root);
