@@ -31,13 +31,13 @@ node *rbtree::insert(int data) {
 void rbtree::insertFix(node *x) {
     while (x != _root && x->parent->color == RED) {
         if (x->parent == x->parent->parent->left) {
-            node *tmp = x->parent->parent->right;
-            if (tmp->color == RED) {
+            node *tmp = x->parent->parent->right; //дядя
+            if (tmp->color == RED) { //если дядя красный
                 x->parent->color = BLACK;
                 x->parent->parent->color = RED;
                 tmp->color = BLACK;
                 x = x->parent->parent;
-            } else {
+            } else {  //если дядя черный
                 if (x == x->parent->right) {
                     x = x->parent;
                     turnLeft(x);
@@ -48,7 +48,7 @@ void rbtree::insertFix(node *x) {
             }
         } else {
             node *tmp = x->parent->parent->left;
-            if (tmp->color == RED) {
+            if (tmp->color == RED) { //если дядя красный
                 x->parent->color = BLACK;
                 x->parent->parent->color = RED;
                 tmp->color = BLACK;
@@ -99,39 +99,45 @@ void rbtree::deleteUnit(struct node *_node) {
     struct node *p = NIL;
     struct node *p2 = NIL;
     if (!_node || _node == NIL) return;
-
-    if (!_node->left || _node->left == NIL && !_node->right || _node->right == NIL) {
+    //* нет детей *//
+    if (_node->left == NIL && _node->right == NIL) {
+        if (_node->color == BLACK)
+            deleteFix(_node);
         if (_node->parent->left == _node) {
             _node->parent->left = NIL;
         } else {
             _node->parent->right = NIL;
         }
-        free(_node);
+        delete _node;
+        return;
+    }                           //* есть оба ребенка *//
+    else if (_node->left != NIL && _node->right != NIL) {
+        p = _node->left;
+        while (p->right != NIL) p = p->right;
+        _node->data = p->data;
+        if (p->left == NIL) {
+    //косяк
+        } else{
+            if (p->parent->left == p) {
+                p->parent->left = p->left;
+            } else {
+                p->parent->right = p->left;
+            }
+        }
         if (p->color == BLACK)
             deleteFix(p);
-        free(_node);
+        //косяк
+        if (p->parent->left == p) {
+            p->parent->left = NIL;
+        } else {
+            p->parent->right = NIL;
+        }
+        //косяк
+        delete p;
         return;
     }
-    if ( _node->left != NIL && _node->right != NIL) {
-        p = _node->left;
-        p2 = _node->right;
-        p2->parent = p;
-        p->right = p2;
-        if (_node->parent) {
-            if (_node->parent->left == _node) {
-                _node->parent->left = p;
-                p->parent = _node->parent;
-            } else {
-                _node->parent->right = p;
-                p->parent = _node->parent;
-            }
-        } else
-            _root = p;
-        if (_node->color == BLACK)
-            deleteFix(p);
-        free(_node);
-        return;
-    }
+
+
     if (!_node->left || _node->left == NIL) {
         p = _node->right;
     } else if (!_node->right || _node->right == NIL) {
@@ -140,43 +146,41 @@ void rbtree::deleteUnit(struct node *_node) {
     if (_node->parent) {
         if (_node->parent->left == _node) {
             _node->parent->left = p;
-            p->parent = _node->parent;
         } else {
             _node->parent->right = p;
-            p->parent = _node->parent;
         }
+        p->parent = _node->parent;
+        p->color = BLACK;//чтобы избежать два красных
     } else
         _root = p;
-
-    if (p->color == BLACK)
-        deleteFix(p);
     free(_node);
+
 }
 
 void rbtree::deleteFix(node *_node) {
     while (_node != _root && _node->color == BLACK) {
         if (_node == _node->parent->left) {
-            node *tmp = _node->parent->right;
-            if (tmp->color == RED) {
+            node *tmp = _node->parent->right; //брат
+            if (tmp->color == RED) { //если брат красный
                 tmp->color = BLACK;
                 _node->parent->color = RED;
-                turnLeft (_node->parent);
-                tmp = _node->parent->right;
+                turnLeft(_node->parent);
+                tmp = _node->parent->right; //получаем черного брата
             }
-            if (tmp->left->color == BLACK && tmp->right->color == BLACK) {
-                tmp->color = RED;
-                _node = _node->parent;
-            } else {
-                if (tmp->right->color == BLACK) {
+            if (tmp->left->color == BLACK && tmp->right->color == BLACK) { //удаляемое значение черное
+                tmp->color = RED;   //красим брата в красный              //и брат черный
+                _node = _node->parent; //красим отца в черный ниже
+            } else { //один из детей не черный
+                if (tmp->right->color == BLACK) { //у брата правый ребенок черный
                     tmp->left->color = BLACK;
                     tmp->color = RED;
-                    turnRight (tmp);
-                    tmp = _node->parent->right;
-                }
-                tmp->color = _node->parent->color;
-                _node->parent->color = BLACK;
-                tmp->right->color = BLACK;
-                turnLeft (_node->parent);
+                    turnRight(tmp);
+                    tmp = _node->parent->right; //рассматриваем брата
+                }//у брата правый ребенок красный
+                tmp->color = _node->parent->color; //перекрашиваем брата в цвет отца
+                _node->parent->color = BLACK; //перекрашмваем отца в черный
+                tmp->right->color = BLACK; //перекоашиваем ребенка отца в черный
+                turnLeft(_node->parent);
                 _node = _root;
             }
         } else {
@@ -184,7 +188,7 @@ void rbtree::deleteFix(node *_node) {
             if (tmp->color == RED) {
                 tmp->color = BLACK;
                 _node->parent->color = RED;
-                turnRight (_node->parent);
+                turnRight(_node->parent);
                 tmp = _node->parent->left;
             }
             if (tmp->right->color == BLACK && tmp->left->color == BLACK) {
@@ -194,13 +198,13 @@ void rbtree::deleteFix(node *_node) {
                 if (tmp->left->color == BLACK) {
                     tmp->right->color = BLACK;
                     tmp->color = RED;
-                    turnLeft (tmp);
+                    turnLeft(tmp);
                     tmp = _node->parent->left;
                 }
                 tmp->color = _node->parent->color;
                 _node->parent->color = BLACK;
                 tmp->left->color = BLACK;
-                turnRight (_node->parent);
+                turnRight(_node->parent);
                 _node = _root;
             }
         }
@@ -276,18 +280,44 @@ void rbtree::turnLeft(node *x) {
     if (x != NIL) x->parent = y;
 }
 
+rbtree::~rbtree() {
+//    if (_root == NIL) return;
+//    node *tmp = _root;
+//    if (tmp->right != NIL) tmp = tmp->right;
+//    if (tmp->left == NIL){
+//        delete tmp;
+//    }
+}
+
 int main() {
     rbtree a;
-    a.insert(2);
-    a.insert(3);
-//    a.insert(-1);
-    a.insert(1);
-    a.insert(4);
-//    a.insert(5);
-//    a._root = a.deleteUnit(4, a._root);
-//    a.insert(4);
-    a.searchUnit(2, a._root);
+    a.insert(20);
+    a.insert(15);
+    a.insert(25);
+    a.insert(16);
+    a.insert(23);
+    a.insert(28);
+    a.insert(10);
+    a.insert(12);
+    a.insert(27);
+    a.insert(13);
+    a.insert(12);
+    a.insert(14);
+    a.insert(17);
+    a.insert(18);
+    a.insert(24);
+//    a.searchUnit(14, a._root);
+    a.searchUnit(12, a._root);
     a.show(&a._root, 0);
+
+////    a.insert(-1);
+//    a.insert(1);
+//    a.insert(4);
+////    a.insert(5);
+////    a._root = a.deleteUnit(4, a._root);
+////    a.insert(4);
+//    a.searchUnit(2, a._root);
+//
     //show(&BinWood, 0);
 //    a.inorder(a._root);
 //    std::cout << std::endl;

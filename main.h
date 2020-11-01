@@ -26,6 +26,8 @@ node sentinel = {0, NIL, NIL, nullptr, BLACK};
 
 class rbtree {
 public:
+    ~rbtree();
+
     node *insert(int data);
 
     void insertFix(node *x);
@@ -54,3 +56,4 @@ public:
 
 
 #endif //STATICREVERSE_MAIN_H
+
